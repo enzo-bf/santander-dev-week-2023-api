@@ -1,107 +1,390 @@
-# Task Manager API
+# 🚀 Task Manager API
 
-REST API for task management built with Java 17, Spring Boot 3, Spring Data JPA, Bean Validation, and OpenAPI.
+API REST para gerenciamento de tarefas desenvolvida com **Java 17**, **Spring Boot 3**, **Spring Data JPA**, **Bean Validation** e **OpenAPI (Swagger)**.
 
-## Architecture
+Este projeto nasceu a partir da evolução de uma API bancária desenvolvida durante a formação da DIO, sendo adaptado para o domínio de gerenciamento de tarefas e enriquecido com validações, filtros, documentação automática, migrações de banco e testes.
 
-The application follows a layered structure:
+---
 
-- `controller`: REST endpoints, request validation, and HTTP response mapping.
-- `controller.dto`: API request and response contracts, independent of JPA entities.
-- `service`: task use cases and business rules.
-- `domain.model`: JPA `Task` entity and task enums.
-- `domain.repository`: Spring Data JPA persistence access.
-- `controller.exception`: centralized HTTP error mapping.
+## 📖 Sobre o Projeto
 
-Task status and priority are stored as enum names. Creation and update timestamps are maintained by JPA lifecycle callbacks. New tasks default to `PENDING` status and `MEDIUM` priority when those values are omitted.
+O objetivo desta aplicação é fornecer uma API simples, escalável e bem estruturada para gerenciamento de tarefas, aplicando boas práticas amplamente utilizadas no mercado.
 
-## Endpoints
+Os principais conceitos utilizados foram:
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/tasks` | List all tasks; accepts optional `status` and `priority` filters |
-| `GET` | `/tasks/{id}` | Retrieve a task |
-| `POST` | `/tasks` | Create a task |
-| `PUT` | `/tasks/{id}` | Update task title and description; status and priority are optional |
-| `DELETE` | `/tasks/{id}` | Delete a task |
-| `PATCH` | `/tasks/{id}/complete` | Mark a task as completed |
+- Arquitetura em Camadas
+- Spring Boot 3
+- Spring Data JPA
+- Bean Validation
+- OpenAPI / Swagger
+- Flyway Migration
+- PostgreSQL
+- Railway
 
-Allowed status values: `PENDING`, `IN_PROGRESS`, `COMPLETED`. Allowed priority values: `LOW`, `MEDIUM`, `HIGH`.
+---
 
-Request validation requires a non-blank title of at most 100 characters. Description is limited to 500 characters. Invalid request values return `400`; missing tasks return `404`.
+## 🏗️ Arquitetura
 
-### Examples
+A aplicação segue uma arquitetura baseada em camadas:
 
-Create a task:
+```text
+Controller
+    │
+    ▼
+Service
+    │
+    ▼
+Repository
+    │
+    ▼
+Database
+```
+
+### Estrutura do Projeto
+
+```text
+src
+├── controller
+│   ├── TaskController
+│   └── dto
+│
+├── service
+│   ├── TaskService
+│   └── TaskServiceImpl
+│
+├── domain
+│   ├── model
+│   ├── repository
+│   └── enums
+│
+├── exception
+│
+└── resources
+```
+
+---
+
+## ✅ Funcionalidades
+
+### Gerenciamento de Tarefas
+
+- Criar tarefas
+- Buscar tarefa por ID
+- Listar tarefas
+- Atualizar tarefas
+- Excluir tarefas
+- Concluir tarefas
+
+### Filtros
+
+- Filtrar por Status
+- Filtrar por Prioridade
+- Filtrar por Status e Prioridade simultaneamente
+
+### Validações
+
+- Título obrigatório
+- Limite de 100 caracteres para título
+- Limite de 500 caracteres para descrição
+
+---
+
+## 📋 Modelo de Tarefa
+
+```json
+{
+  "id": 1,
+  "title": "Preparar apresentação",
+  "description": "Montar apresentação para reunião do projeto",
+  "status": "IN_PROGRESS",
+  "priority": "HIGH",
+  "createdAt": "2026-10-23T10:00:00",
+  "updatedAt": "2026-10-23T14:00:00"
+}
+```
+
+---
+
+## 🏷️ Status
+
+```text
+PENDING
+IN_PROGRESS
+COMPLETED
+```
+
+---
+
+## 🎯 Prioridades
+
+```text
+LOW
+MEDIUM
+HIGH
+```
+
+---
+
+# 🔗 Endpoints
+
+## Criar Tarefa
 
 ```http
 POST /tasks
-Content-Type: application/json
+```
 
+### Exemplo
+
+```json
 {
-  "title": "Prepare project proposal",
-  "description": "Draft the scope and delivery estimate",
+  "title": "Preparar proposta",
+  "description": "Elaborar escopo e estimativa",
   "priority": "HIGH"
 }
 ```
 
-Filter by status and/or priority:
+---
+
+## Listar Tarefas
 
 ```http
-GET /tasks?status=PENDING
-GET /tasks?priority=HIGH
-GET /tasks?status=IN_PROGRESS&priority=HIGH
+GET /tasks
 ```
 
-Update a task:
+---
+
+## Buscar Tarefa
 
 ```http
-PUT /tasks/1
-Content-Type: application/json
+GET /tasks/{id}
+```
 
+---
+
+## Atualizar Tarefa
+
+```http
+PUT /tasks/{id}
+```
+
+### Exemplo
+
+```json
 {
-  "title": "Prepare project proposal",
-  "description": "Include scope, estimate, and timeline",
+  "title": "Preparar proposta",
+  "description": "Adicionar cronograma detalhado",
   "status": "IN_PROGRESS",
   "priority": "HIGH"
 }
 ```
 
-Complete a task:
+---
+
+## Excluir Tarefa
 
 ```http
-PATCH /tasks/1/complete
+DELETE /tasks/{id}
 ```
 
-## Run locally
+---
 
-Use JDK 17 and run:
+## Concluir Tarefa
+
+```http
+PATCH /tasks/{id}/complete
+```
+
+---
+
+## Filtrar por Status
+
+```http
+GET /tasks?status=PENDING
+```
+
+---
+
+## Filtrar por Prioridade
+
+```http
+GET /tasks?priority=HIGH
+```
+
+---
+
+## Filtrar por Status e Prioridade
+
+```http
+GET /tasks?status=IN_PROGRESS&priority=HIGH
+```
+
+---
+
+# 🛡️ Tratamento de Erros
+
+A API possui tratamento global de exceções para:
+
+- Tarefa não encontrada (404)
+- Dados inválidos (400)
+- Erros internos (500)
+
+Exemplo:
+
+```json
+{
+  "timestamp": "2026-10-23T15:30:00",
+  "status": 404,
+  "message": "Task not found"
+}
+```
+
+---
+
+# 📚 Documentação Swagger
+
+Após iniciar a aplicação, acesse:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+ou
+
+```text
+http://localhost:8080/swagger-ui/index.html
+```
+
+Documentação OpenAPI:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+---
+
+# 🗄️ Banco de Dados
+
+Ambiente de desenvolvimento:
+
+```text
+H2 Database
+```
+
+Ambiente de produção:
+
+```text
+PostgreSQL
+```
+
+As migrações são gerenciadas através do:
+
+```text
+Flyway
+```
+
+---
+
+# ▶️ Executando Localmente
+
+### Clonar o repositório
+
+```bash
+git clone https://github.com/enzo-bf/task-manager-api.git
+```
+
+### Entrar na pasta
+
+```bash
+cd task-manager-api
+```
+
+### Executar
+
+Linux/macOS:
 
 ```bash
 ./gradlew bootRun
 ```
 
-On Windows:
+Windows:
 
 ```powershell
 .\gradlew.bat bootRun
 ```
 
-The `dev` profile is active by default and uses an in-memory H2 database. Run the test suite with `./gradlew test` (or `.\gradlew.bat test` on Windows).
+---
 
-## Swagger / OpenAPI
+# ☁️ Deploy no Railway
 
-When the application is running, Swagger UI is available at `/swagger-ui.html` and the OpenAPI document at `/v3/api-docs`.
+Variáveis necessárias:
 
-## Railway deployment
+```env
+SPRING_PROFILES_ACTIVE=prd
 
-Deploy this repository as a Railway service using the Gradle build. Provision a PostgreSQL database and set these service variables from the database connection details:
+PGHOST=
+PGPORT=
+PGDATABASE=
+PGUSER=
+PGPASSWORD=
+```
 
-- `SPRING_PROFILES_ACTIVE=prd`
-- `PGHOST`
-- `PGPORT`
-- `PGDATABASE`
-- `PGUSER`
-- `PGPASSWORD`
+O Railway utilizará automaticamente a variável:
 
-Railway's `PORT` is used by the production profile. Flyway applies the versioned database migration at startup, then Hibernate validates the schema. Do not use Hibernate schema auto-update as a production migration strategy.
+```env
+PORT
+```
+
+para exposição da aplicação.
+
+---
+
+# 🧪 Testes
+
+Para executar os testes:
+
+Linux/macOS:
+
+```bash
+./gradlew test
+```
+
+Windows:
+
+```powershell
+.\gradlew.bat test
+```
+
+---
+
+# 🚀 Evoluções Implementadas
+
+Além do projeto original, foram adicionados:
+
+- ✅ Novo domínio de negócio (Task Manager)
+- ✅ DTOs dedicados
+- ✅ Bean Validation
+- ✅ Filtros por Status
+- ✅ Filtros por Prioridade
+- ✅ Swagger/OpenAPI
+- ✅ Flyway Migration
+- ✅ Tratamento global de exceções
+- ✅ Testes unitários
+- ✅ Suporte ao Railway
+
+---
+
+# 👨‍💻 Autor
+
+**Enzo Francisco**
+
+Desenvolvedor Back-End focado em:
+
+- Java
+- Spring Boot
+- Microsserviços
+- Cloud Computing
+- Arquitetura de Software
+
+---
+
+## ⭐ Projeto desenvolvido durante a formação da Digital Innovation One (DIO)
