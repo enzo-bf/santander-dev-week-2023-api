@@ -372,6 +372,19 @@ Além do projeto original, foram adicionados:
 - ✅ Suporte ao Railway
 
 ---
+## Utilização do GitHub Copilot
+
+Durante o desenvolvimento deste projeto, utilizei o GitHub Copilot como ferramenta de apoio para:
+
+- Criação de entidades
+- Geração de DTOs
+- Implementação de Controllers
+- Construção de Services
+- Criação de testes unitários
+- Refatorações
+- Geração de documentação
+
+A utilização da IA permitiu acelerar o desenvolvimento, validar abordagens e aumentar a produtividade durante a implementação da API.
 
 # 👨‍💻 Autor
 
