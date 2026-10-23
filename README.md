@@ -1,66 +1,107 @@
-# Santander Dev Week 2023 Java API
+# Task Manager API
 
-RESTful API da Santander Dev Week 2023 construída em Java 17 com Spring Boot 3.
+REST API for task management built with Java 17, Spring Boot 3, Spring Data JPA, Bean Validation, and OpenAPI.
 
-## Principais Tecnologias
- - **Java 17**: Utilizaremos a versão LTS mais recente do Java para tirar vantagem das últimas inovações que essa linguagem robusta e amplamente utilizada oferece;
- - **Spring Boot 3**: Trabalharemos com a mais nova versão do Spring Boot, que maximiza a produtividade do desenvolvedor por meio de sua poderosa premissa de autoconfiguração;
- - **Spring Data JPA**: Exploraremos como essa ferramenta pode simplificar nossa camada de acesso aos dados, facilitando a integração com bancos de dados SQL;
- - **OpenAPI (Swagger)**: Vamos criar uma documentação de API eficaz e fácil de entender usando a OpenAPI (Swagger), perfeitamente alinhada com a alta produtividade que o Spring Boot oferece;
- - **Railway**: facilita o deploy e monitoramento de nossas soluções na nuvem, além de oferecer diversos bancos de dados como serviço e pipelines de CI/CD.
+## Architecture
 
-## [Link do Figma](https://www.figma.com/file/0ZsjwjsYlYd3timxqMWlbj/SANTANDER---Projeto-Web%2FMobile?type=design&node-id=1421%3A432&mode=design&t=6dPQuerScEQH0zAn-1)
+The application follows a layered structure:
 
-O Figma foi utilizado para a abstração do domínio desta API, sendo útil na análise e projeto da solução.
+- `controller`: REST endpoints, request validation, and HTTP response mapping.
+- `controller.dto`: API request and response contracts, independent of JPA entities.
+- `service`: task use cases and business rules.
+- `domain.model`: JPA `Task` entity and task enums.
+- `domain.repository`: Spring Data JPA persistence access.
+- `controller.exception`: centralized HTTP error mapping.
 
-## Diagrama de Classes (Domínio da API)
+Task status and priority are stored as enum names. Creation and update timestamps are maintained by JPA lifecycle callbacks. New tasks default to `PENDING` status and `MEDIUM` priority when those values are omitted.
 
-```mermaid
-classDiagram
-  class User {
-    -String name
-    -Account account
-    -Feature[] features
-    -Card card
-    -News[] news
-  }
+## Endpoints
 
-  class Account {
-    -String number
-    -String agency
-    -Number balance
-    -Number limit
-  }
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/tasks` | List all tasks; accepts optional `status` and `priority` filters |
+| `GET` | `/tasks/{id}` | Retrieve a task |
+| `POST` | `/tasks` | Create a task |
+| `PUT` | `/tasks/{id}` | Update task title and description; status and priority are optional |
+| `DELETE` | `/tasks/{id}` | Delete a task |
+| `PATCH` | `/tasks/{id}/complete` | Mark a task as completed |
 
-  class Feature {
-    -String icon
-    -String description
-  }
+Allowed status values: `PENDING`, `IN_PROGRESS`, `COMPLETED`. Allowed priority values: `LOW`, `MEDIUM`, `HIGH`.
 
-  class Card {
-    -String number
-    -Number limit
-  }
+Request validation requires a non-blank title of at most 100 characters. Description is limited to 500 characters. Invalid request values return `400`; missing tasks return `404`.
 
-  class News {
-    -String icon
-    -String description
-  }
+### Examples
 
-  User "1" *-- "1" Account
-  User "1" *-- "N" Feature
-  User "1" *-- "1" Card
-  User "1" *-- "N" News
+Create a task:
+
+```http
+POST /tasks
+Content-Type: application/json
+
+{
+  "title": "Prepare project proposal",
+  "description": "Draft the scope and delivery estimate",
+  "priority": "HIGH"
+}
 ```
 
-## Documentação da API (Swagger)
+Filter by status and/or priority:
 
-### [https://sdw-2023-prd.up.railway.app/swagger-ui.html](https://sdw-2023-prd.up.railway.app/swagger-ui.html)
+```http
+GET /tasks?status=PENDING
+GET /tasks?priority=HIGH
+GET /tasks?status=IN_PROGRESS&priority=HIGH
+```
 
-Esta API ficará disponível no Railway por um período de tempo limitado, mas este é um código-fonte aberto. Portanto, sintam-se à vontade para cloná-lo, modificá-lo (já que é um bom projeto base para novos projetos) e executar localmente ou onde achar mais interessante! Só não esquece de marcar a gente quando divulgar a sua solução 🥰
+Update a task:
 
-### IMPORTANTE
+```http
+PUT /tasks/1
+Content-Type: application/json
 
-Aos interessados no desenvolvimento da tela inicial do App do Santander (Figma) em Angular, Android, iOS ou Flutter... Caso a URL produtiva não esteja mais disponível, deixamos um Backup no GitHub Pages, é só dar um GET lá 😘
-- URL de Produção: https://sdw-2023-prd.up.railway.app/users/1
-- Mock (Backup): https://digitalinnovationone.github.io/santander-dev-week-2023-api/mocks/find_one.json
+{
+  "title": "Prepare project proposal",
+  "description": "Include scope, estimate, and timeline",
+  "status": "IN_PROGRESS",
+  "priority": "HIGH"
+}
+```
+
+Complete a task:
+
+```http
+PATCH /tasks/1/complete
+```
+
+## Run locally
+
+Use JDK 17 and run:
+
+```bash
+./gradlew bootRun
+```
+
+On Windows:
+
+```powershell
+.\gradlew.bat bootRun
+```
+
+The `dev` profile is active by default and uses an in-memory H2 database. Run the test suite with `./gradlew test` (or `.\gradlew.bat test` on Windows).
+
+## Swagger / OpenAPI
+
+When the application is running, Swagger UI is available at `/swagger-ui.html` and the OpenAPI document at `/v3/api-docs`.
+
+## Railway deployment
+
+Deploy this repository as a Railway service using the Gradle build. Provision a PostgreSQL database and set these service variables from the database connection details:
+
+- `SPRING_PROFILES_ACTIVE=prd`
+- `PGHOST`
+- `PGPORT`
+- `PGDATABASE`
+- `PGUSER`
+- `PGPASSWORD`
+
+Railway's `PORT` is used by the production profile. Flyway applies the versioned database migration at startup, then Hibernate validates the schema. Do not use Hibernate schema auto-update as a production migration strategy.

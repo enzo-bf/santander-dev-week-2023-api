@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.servers.Server;
 
 /**
@@ -16,7 +17,12 @@ import io.swagger.v3.oas.annotations.servers.Server;
  * </p>
  */
 
-@OpenAPIDefinition(servers = {@Server(url = "/", description = "Default Server URL")})
+@OpenAPIDefinition(
+		info = @Info(
+				title = "Task Manager API",
+				version = "1.0.0",
+				description = "REST API for creating, updating, filtering, and completing tasks."),
+		servers = {@Server(url = "/", description = "Default Server URL")})
 @SpringBootApplication
 public class Application {
 	public static void main(String[] args) {

@@ -1,10 +1,10 @@
 package me.dio.service.exception;
 
-public class BusinessException extends RuntimeException {
+public class InvalidTaskException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public BusinessException(String message) {
+    public InvalidTaskException(String message) {
         super(message);
     }
 }
